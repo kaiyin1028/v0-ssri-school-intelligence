@@ -108,6 +108,57 @@ export const TYPE_LABELS: Record<SchoolType, string> = {
   International: "國際"
 }
 
+export const SSRI_DIMENSIONS = [
+  {
+    id: "student-wellbeing",
+    name: "學生福祉",
+    description: "學生身心健康、輔導服務、校園安全",
+    weight: 20,
+    color: "#10b981",
+    indicators: ["輔導服務質量", "心理健康支援", "校園安全措施", "學生支援多樣性"]
+  },
+  {
+    id: "teacher-development",
+    name: "教師發展",
+    description: "教師培訓、專業發展、教學創新",
+    weight: 18,
+    color: "#0ea5e9",
+    indicators: ["教師培訓時數", "教師流失率", "專業資格比例", "教學創新"]
+  },
+  {
+    id: "community-engagement",
+    name: "社區參與",
+    description: "家長參與、社區合作、義工服務",
+    weight: 15,
+    color: "#8b5cf6",
+    indicators: ["家長參與度", "社區合作", "義工服務", "校友網絡"]
+  },
+  {
+    id: "curriculum-innovation",
+    name: "課程創新",
+    description: "跨學科學習、環境教育、公民教育",
+    weight: 17,
+    color: "#f59e0b",
+    indicators: ["跨學科課程", "環境教育", "公民教育", "STEM教育"]
+  },
+  {
+    id: "governance-transparency",
+    name: "管治透明",
+    description: "財務公開、決策透明、問責機制",
+    weight: 15,
+    color: "#ef4444",
+    indicators: ["財務公開", "決策透明", "問責機制", "資訊披露"]
+  },
+  {
+    id: "environmental-sustainability",
+    name: "環境永續",
+    description: "環保措施、資源節約、綠色校園",
+    weight: 15,
+    color: "#22c55e",
+    indicators: ["環保措施", "資源節約", "綠色校園", "環境教育"]
+  }
+]
+
 export const DISTRICTS = [
   "中西區",
   "灣仔",
