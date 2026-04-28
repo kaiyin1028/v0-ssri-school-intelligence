@@ -170,9 +170,101 @@ export const NAV_ITEMS = [
   { href: "/methodology", label: "評分方法", icon: "BookOpen" }
 ]
 
+export const AI_NEEDS_NAV_ITEMS = [
+  { href: "/needs", label: "需求雷達", icon: "Radar" },
+  { href: "/opportunities", label: "商機名單", icon: "Target" },
+  { href: "/solutions", label: "服務方案庫", icon: "Briefcase" },
+  { href: "/crm", label: "跟進工作台", icon: "ClipboardList" }
+]
+
 export const ADMIN_NAV_ITEMS = [
   { href: "/admin", label: "管理總覽", icon: "LayoutDashboard" },
   { href: "/admin/crawling", label: "爬蟲監控", icon: "Database" },
   { href: "/admin/evidence", label: "證據審核", icon: "FileSearch" },
-  { href: "/admin/scoring", label: "評分審核", icon: "Calculator" }
+  { href: "/admin/scoring", label: "評分審核", icon: "Calculator" },
+  { href: "/admin/need-model", label: "需求模型", icon: "Brain" },
+  { href: "/admin/solution-catalog", label: "方案管理", icon: "Package" }
 ]
+
+// AI Education Needs Module Constants
+import type { NeedDimension, AIMaturityLevel, OpportunityStage, SignalCategory, SignalSource } from "./types"
+
+export const NEED_DIMENSION_LABELS: Record<NeedDimension, { zh: string; en: string; icon: string }> = {
+  TeacherTraining: { zh: "教師培訓", en: "Teacher Training", icon: "GraduationCap" },
+  AICurriculum: { zh: "AI 課程包", en: "AI Curriculum", icon: "BookOpenCheck" },
+  StudentCompetition: { zh: "學生比賽", en: "Student Competition", icon: "Trophy" },
+  AIPolicy: { zh: "AI 政策", en: "AI Policy", icon: "ShieldAlert" },
+  Hardware: { zh: "硬件設備", en: "Hardware", icon: "MonitorCog" },
+  SoftwarePlatform: { zh: "軟件平台", en: "Software Platform", icon: "PanelsTopLeft" },
+  SchoolBasedConsulting: { zh: "校本顧問", en: "School-based Consulting", icon: "Lightbulb" },
+  SafetyCompliance: { zh: "安全合規", en: "Safety & Compliance", icon: "LockKeyhole" }
+}
+
+export const MATURITY_LEVEL_CONFIG: Record<AIMaturityLevel, { label: string; color: string; bgColor: string; description: string }> = {
+  A_Leading: { 
+    label: "領先", 
+    color: "text-emerald-700", 
+    bgColor: "bg-emerald-100",
+    description: "已有完善 AI 教育體系"
+  },
+  B_Progressive: { 
+    label: "進取", 
+    color: "text-sky-700", 
+    bgColor: "bg-sky-100",
+    description: "積極發展 AI 教育"
+  },
+  C_Starting: { 
+    label: "啟動中", 
+    color: "text-amber-700", 
+    bgColor: "bg-amber-100",
+    description: "開始探索 AI 教育"
+  },
+  D_SilentPotential: { 
+    label: "沉默潛力", 
+    color: "text-slate-600", 
+    bgColor: "bg-slate-100",
+    description: "公開資料較少"
+  }
+}
+
+export const OPPORTUNITY_STAGE_CONFIG: Record<OpportunityStage, { label: string; color: string; bgColor: string }> = {
+  "Not Contacted": { label: "未聯繫", color: "text-slate-600", bgColor: "bg-slate-100" },
+  "Contacted": { label: "已聯繫", color: "text-sky-700", bgColor: "bg-sky-100" },
+  "Replied": { label: "已回覆", color: "text-blue-700", bgColor: "bg-blue-100" },
+  "Meeting Scheduled": { label: "會議已排", color: "text-violet-700", bgColor: "bg-violet-100" },
+  "Proposal Sent": { label: "已提案", color: "text-amber-700", bgColor: "bg-amber-100" },
+  "Pilot": { label: "試點中", color: "text-orange-700", bgColor: "bg-orange-100" },
+  "Won": { label: "成功", color: "text-emerald-700", bgColor: "bg-emerald-100" },
+  "Paused": { label: "暫停", color: "text-gray-600", bgColor: "bg-gray-100" },
+  "Lost": { label: "失敗", color: "text-red-700", bgColor: "bg-red-100" }
+}
+
+export const PRIORITY_CONFIG: Record<"High" | "Medium" | "Low", { label: string; color: string; bgColor: string }> = {
+  High: { label: "高", color: "text-emerald-700", bgColor: "bg-emerald-100" },
+  Medium: { label: "中", color: "text-sky-700", bgColor: "bg-sky-100" },
+  Low: { label: "低", color: "text-slate-600", bgColor: "bg-slate-100" }
+}
+
+export const SIGNAL_CATEGORY_LABELS: Record<SignalCategory, string> = {
+  Curriculum: "課程",
+  Activity: "活動",
+  Competition: "比賽",
+  TeacherDevelopment: "教師發展",
+  Equipment: "設備",
+  Tender: "招標",
+  ParentEducation: "家長教育",
+  Policy: "政策",
+  ManualInput: "人工輸入",
+  Other: "其他"
+}
+
+export const SIGNAL_SOURCE_LABELS: Record<SignalSource, string> = {
+  "School Website": "學校網站",
+  Tender: "招標平台",
+  "Competition Site": "比賽網站",
+  Government: "政府資料",
+  Media: "媒體報導",
+  "Social Media": "社交媒體",
+  "Manual Input": "人工輸入",
+  Other: "其他"
+}

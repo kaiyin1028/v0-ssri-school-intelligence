@@ -14,7 +14,16 @@ import {
   ChevronDown,
   User,
   School as SchoolIcon,
-  Shield
+  Shield,
+  Radar,
+  Target,
+  Briefcase,
+  ClipboardList,
+  Database,
+  FileSearch,
+  Calculator,
+  Package,
+  Home
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -27,17 +36,26 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
-import { NAV_ITEMS, ADMIN_NAV_ITEMS } from "@/lib/constants"
+import { NAV_ITEMS, AI_NEEDS_NAV_ITEMS, ADMIN_NAV_ITEMS } from "@/lib/constants"
 import type { UserRole } from "@/lib/types"
 import { useState } from "react"
 
 const iconMap: Record<string, React.ElementType> = {
-  Home: Brain,
+  Home: Home,
   Search: Search,
   GitCompare: GitCompare,
   FileText: FileText,
   BookOpen: BookOpen,
-  LayoutDashboard: LayoutDashboard
+  LayoutDashboard: LayoutDashboard,
+  Radar: Radar,
+  Target: Target,
+  Briefcase: Briefcase,
+  ClipboardList: ClipboardList,
+  Database: Database,
+  FileSearch: FileSearch,
+  Calculator: Calculator,
+  Brain: Brain,
+  Package: Package
 }
 
 const roleConfig: Record<UserRole, { label: string; icon: React.ElementType; color: string }> = {
@@ -51,7 +69,7 @@ export function Header() {
   const [currentRole, setCurrentRole] = useState<UserRole>("Parent")
   const isAdmin = pathname.startsWith("/admin")
 
-  const navItems = isAdmin ? [...NAV_ITEMS, ...ADMIN_NAV_ITEMS] : NAV_ITEMS
+  const allNavItems = [...NAV_ITEMS, ...AI_NEEDS_NAV_ITEMS, ...(isAdmin ? ADMIN_NAV_ITEMS : [])]
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
@@ -69,7 +87,7 @@ export function Header() {
 
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-1 md:flex">
-          {navItems.map((item) => {
+          {allNavItems.slice(0, 8).map((item) => {
             const Icon = iconMap[item.icon] || Brain
             const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
             return (
@@ -148,7 +166,8 @@ export function Header() {
                   <span className="font-semibold">SSRI 平台</span>
                 </div>
                 <nav className="flex flex-col gap-1">
-                  {navItems.map((item) => {
+                  <p className="mb-1 px-2 text-xs font-medium text-muted-foreground">總覽</p>
+                  {NAV_ITEMS.map((item) => {
                     const Icon = iconMap[item.icon] || Brain
                     const isActive = pathname === item.href
                     return (
@@ -166,6 +185,48 @@ export function Header() {
                       </Link>
                     )
                   })}
+                  <p className="mb-1 mt-3 px-2 text-xs font-medium text-muted-foreground">AI 教育需求</p>
+                  {AI_NEEDS_NAV_ITEMS.map((item) => {
+                    const Icon = iconMap[item.icon] || Brain
+                    const isActive = pathname === item.href
+                    return (
+                      <Link key={item.href} href={item.href}>
+                        <Button
+                          variant={isActive ? "secondary" : "ghost"}
+                          className={cn(
+                            "w-full justify-start gap-3",
+                            isActive && "bg-primary/10 text-primary"
+                          )}
+                        >
+                          <Icon className="h-4 w-4" />
+                          {item.label}
+                        </Button>
+                      </Link>
+                    )
+                  })}
+                  {isAdmin && (
+                    <>
+                      <p className="mb-1 mt-3 px-2 text-xs font-medium text-muted-foreground">內部管理</p>
+                      {ADMIN_NAV_ITEMS.map((item) => {
+                        const Icon = iconMap[item.icon] || Brain
+                        const isActive = pathname === item.href
+                        return (
+                          <Link key={item.href} href={item.href}>
+                            <Button
+                              variant={isActive ? "secondary" : "ghost"}
+                              className={cn(
+                                "w-full justify-start gap-3",
+                                isActive && "bg-primary/10 text-primary"
+                              )}
+                            >
+                              <Icon className="h-4 w-4" />
+                              {item.label}
+                            </Button>
+                          </Link>
+                        )
+                      })}
+                    </>
+                  )}
                 </nav>
                 <div className="border-t pt-4">
                   <p className="mb-2 px-2 text-xs font-medium text-muted-foreground">切換視角</p>

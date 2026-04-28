@@ -314,3 +314,262 @@ export function getSimilarSchools(schoolId: string, limit: number = 3): Promise<
   
   return Promise.resolve(similar)
 }
+
+// ==================== AI Education Need Module APIs ====================
+
+import type {
+  SchoolNeedProfile,
+  SchoolSignal,
+  Solution,
+  Opportunity,
+  NeedModelConfig,
+  CRMActivity
+} from "./types"
+import {
+  mockNeedProfiles,
+  mockSchoolSignals,
+  mockSolutions,
+  mockOpportunities,
+  mockNeedModelConfig,
+  mockCRMActivities,
+  mockNeedsStats,
+  mockOpportunityStats
+} from "./mock-data"
+
+// GET /api/v1/needs
+export async function getNeedProfiles(): Promise<SchoolNeedProfile[]> {
+  await new Promise(resolve => setTimeout(resolve, 300))
+  return mockNeedProfiles
+}
+
+// GET /api/v1/needs/{schoolId}
+export async function getNeedProfileBySchoolId(schoolId: string): Promise<SchoolNeedProfile | null> {
+  await new Promise(resolve => setTimeout(resolve, 200))
+  return mockNeedProfiles.find(p => p.schoolId === schoolId) || null
+}
+
+// GET /api/v1/needs/{schoolId}/signals
+export async function getSchoolSignals(schoolId: string): Promise<SchoolSignal[]> {
+  await new Promise(resolve => setTimeout(resolve, 300))
+  return mockSchoolSignals.filter(s => s.schoolId === schoolId)
+}
+
+// POST /api/v1/needs/{schoolId}/reanalyze
+export async function reanalyzeSchoolNeeds(schoolId: string): Promise<{ success: boolean; message: string }> {
+  console.log("Reanalyzing needs for school:", schoolId)
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  return { success: true, message: "需求分析已重新執行" }
+}
+
+// GET /api/v1/needs/stats
+export async function getNeedsStats(): Promise<typeof mockNeedsStats> {
+  await new Promise(resolve => setTimeout(resolve, 200))
+  return mockNeedsStats
+}
+
+// GET /api/v1/opportunities
+export async function getOpportunities(): Promise<Opportunity[]> {
+  await new Promise(resolve => setTimeout(resolve, 300))
+  return mockOpportunities
+}
+
+// GET /api/v1/opportunities/{id}
+export async function getOpportunityById(id: string): Promise<Opportunity | null> {
+  await new Promise(resolve => setTimeout(resolve, 200))
+  return mockOpportunities.find(o => o.id === id) || null
+}
+
+// POST /api/v1/opportunities
+export async function createOpportunity(payload: Partial<Opportunity>): Promise<Opportunity> {
+  console.log("Creating opportunity:", payload)
+  await new Promise(resolve => setTimeout(resolve, 500))
+  return {
+    id: `opp-new-${Date.now()}`,
+    schoolId: payload.schoolId || "",
+    schoolName: payload.schoolName || "",
+    district: payload.district || "",
+    level: payload.level || "Secondary",
+    maturityLevel: payload.maturityLevel || "C_Starting",
+    opportunityScore: payload.opportunityScore || 50,
+    priority: payload.priority || "Medium",
+    stage: payload.stage || "Not Contacted",
+    recommendedSolutionIds: payload.recommendedSolutionIds || [],
+    topNeedDimensions: payload.topNeedDimensions || [],
+    keyReasons: payload.keyReasons || [],
+    latestSignalSummary: payload.latestSignalSummary || "",
+    ...payload
+  }
+}
+
+// PATCH /api/v1/opportunities/{id}
+export async function updateOpportunity(id: string, payload: Partial<Opportunity>): Promise<{ success: boolean }> {
+  console.log("Updating opportunity:", id, payload)
+  await new Promise(resolve => setTimeout(resolve, 500))
+  return { success: true }
+}
+
+// GET /api/v1/opportunities/stats
+export async function getOpportunityStats(): Promise<typeof mockOpportunityStats> {
+  await new Promise(resolve => setTimeout(resolve, 200))
+  return mockOpportunityStats
+}
+
+// GET /api/v1/solutions
+export async function getSolutions(): Promise<Solution[]> {
+  await new Promise(resolve => setTimeout(resolve, 300))
+  return mockSolutions
+}
+
+// GET /api/v1/solutions/{id}
+export async function getSolutionById(id: string): Promise<Solution | null> {
+  await new Promise(resolve => setTimeout(resolve, 200))
+  return mockSolutions.find(s => s.id === id) || null
+}
+
+// POST /api/v1/solutions
+export async function createSolution(payload: Partial<Solution>): Promise<Solution> {
+  console.log("Creating solution:", payload)
+  await new Promise(resolve => setTimeout(resolve, 500))
+  return {
+    id: `sol-new-${Date.now()}`,
+    nameZh: payload.nameZh || "",
+    description: payload.description || "",
+    targetLevels: payload.targetLevels || [],
+    suitableMaturityLevels: payload.suitableMaturityLevels || [],
+    mappedNeedDimensions: payload.mappedNeedDimensions || [],
+    deliveryMode: payload.deliveryMode || "Onsite",
+    duration: payload.duration || "",
+    budgetRange: payload.budgetRange || "",
+    prerequisites: payload.prerequisites || [],
+    deliverables: payload.deliverables || [],
+    expectedOutcomes: payload.expectedOutcomes || [],
+    proposalTemplate: payload.proposalTemplate || "",
+    emailTemplate: payload.emailTemplate || "",
+    active: payload.active ?? true,
+    ...payload
+  }
+}
+
+// PATCH /api/v1/solutions/{id}
+export async function updateSolution(id: string, payload: Partial<Solution>): Promise<{ success: boolean }> {
+  console.log("Updating solution:", id, payload)
+  await new Promise(resolve => setTimeout(resolve, 500))
+  return { success: true }
+}
+
+// DELETE /api/v1/solutions/{id}
+export async function deleteSolution(id: string): Promise<{ success: boolean }> {
+  console.log("Deleting solution:", id)
+  await new Promise(resolve => setTimeout(resolve, 500))
+  return { success: true }
+}
+
+// POST /api/v1/outreach/generate
+export async function generateOutreach(payload: {
+  schoolId: string
+  channel: "Email" | "WhatsApp" | "Phone" | "Proposal"
+  tone: "formal" | "friendly" | "concise"
+  solutionId?: string
+}): Promise<{ subject?: string; body: string }> {
+  console.log("Generating outreach:", payload)
+  await new Promise(resolve => setTimeout(resolve, 800))
+  
+  // Mock AI-generated content
+  if (payload.channel === "Email") {
+    return {
+      subject: "AI 教育服務介紹 - 誠邀合作",
+      body: `敬啟者：
+
+我們是專注於 AI 教育服務的團隊。根據公開資料，了解到貴校在創科教育方面的發展，特此聯繫。
+
+我們提供以下服務：
+• 教師生成式 AI 教學工作坊
+• AI 數據素養學生課程
+• AI 校本課程設計顧問
+
+如貴校有興趣了解更多，歡迎安排簡短會議。
+
+順祝 教安
+
+AI 教育服務團隊`
+    }
+  }
+  
+  return {
+    body: "感謝貴校對 AI 教育的重視，我們誠意為貴校提供專業支援..."
+  }
+}
+
+// POST /api/v1/proposal/generate
+export async function generateProposal(payload: {
+  schoolId: string
+  solutionIds: string[]
+}): Promise<{ content: string }> {
+  console.log("Generating proposal:", payload)
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  
+  return {
+    content: `# AI 教育服務方案建議書
+
+## 1. 背景
+根據貴校在 AI 教育發展的需要...
+
+## 2. 建議方案
+...
+
+## 3. 預期成果
+...`
+  }
+}
+
+// GET /api/v1/crm/activities/{opportunityId}
+export async function getCRMActivities(opportunityId: string): Promise<CRMActivity[]> {
+  await new Promise(resolve => setTimeout(resolve, 300))
+  return mockCRMActivities.filter(a => a.opportunityId === opportunityId)
+}
+
+// POST /api/v1/crm/activities
+export async function createCRMActivity(payload: Partial<CRMActivity>): Promise<CRMActivity> {
+  console.log("Creating CRM activity:", payload)
+  await new Promise(resolve => setTimeout(resolve, 500))
+  return {
+    id: `act-new-${Date.now()}`,
+    opportunityId: payload.opportunityId || "",
+    type: payload.type || "Note",
+    title: payload.title || "",
+    content: payload.content || "",
+    createdAt: new Date().toISOString(),
+    createdBy: payload.createdBy || "系統用戶",
+    ...payload
+  }
+}
+
+// GET /api/v1/admin/need-model
+export async function getNeedModelConfig(): Promise<NeedModelConfig> {
+  await new Promise(resolve => setTimeout(resolve, 300))
+  return mockNeedModelConfig
+}
+
+// PATCH /api/v1/admin/need-model
+export async function updateNeedModelConfig(payload: Partial<NeedModelConfig>): Promise<{ success: boolean }> {
+  console.log("Updating need model config:", payload)
+  await new Promise(resolve => setTimeout(resolve, 500))
+  return { success: true }
+}
+
+// POST /api/v1/admin/need-model/test
+export async function testNeedModel(schoolId: string): Promise<{
+  before: SchoolNeedProfile | null
+  after: SchoolNeedProfile | null
+  changes: string[]
+}> {
+  console.log("Testing need model for school:", schoolId)
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  
+  const profile = mockNeedProfiles.find(p => p.schoolId === schoolId)
+  return {
+    before: profile || null,
+    after: profile ? { ...profile, opportunityScore: profile.opportunityScore + 5 } : null,
+    changes: ["商機分數 +5", "教師培訓維度權重已更新"]
+  }
+}

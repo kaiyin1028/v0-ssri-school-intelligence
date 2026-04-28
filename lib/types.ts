@@ -140,3 +140,183 @@ export interface SchoolSearchParams {
   page?: number
   limit?: number
 }
+
+// ==================== AI Education Need Module Types ====================
+
+export type NeedDimension =
+  | "TeacherTraining"
+  | "AICurriculum"
+  | "StudentCompetition"
+  | "AIPolicy"
+  | "Hardware"
+  | "SoftwarePlatform"
+  | "SchoolBasedConsulting"
+  | "SafetyCompliance"
+
+export type AIMaturityLevel =
+  | "A_Leading"
+  | "B_Progressive"
+  | "C_Starting"
+  | "D_SilentPotential"
+
+export type OpportunityStage =
+  | "Not Contacted"
+  | "Contacted"
+  | "Replied"
+  | "Meeting Scheduled"
+  | "Proposal Sent"
+  | "Pilot"
+  | "Won"
+  | "Paused"
+  | "Lost"
+
+export type SignalCategory =
+  | "Curriculum"
+  | "Activity"
+  | "Competition"
+  | "TeacherDevelopment"
+  | "Equipment"
+  | "Tender"
+  | "ParentEducation"
+  | "Policy"
+  | "ManualInput"
+  | "Other"
+
+export type SignalSource =
+  | "School Website"
+  | "Tender"
+  | "Competition Site"
+  | "Government"
+  | "Media"
+  | "Social Media"
+  | "Manual Input"
+  | "Other"
+
+export interface NeedDimensionScore {
+  dimension: NeedDimension
+  labelZh: string
+  score: number
+  confidence: "High" | "Medium" | "Low" | "Insufficient"
+  signalCount: number
+  topSignals: string[]
+  explanation: string
+}
+
+export interface SchoolNeedProfile {
+  schoolId: string
+  maturityLevel: AIMaturityLevel
+  maturityLabelZh: string
+  overallNeedScore: number
+  opportunityScore: number
+  confidence: "High" | "Medium" | "Low" | "Insufficient"
+  lastAnalyzedAt: string
+  needDimensions: NeedDimensionScore[]
+  aiSummary: string
+  topPotentialNeeds: string[]
+  suggestedEntryPoint: string
+  recommendedSolutionIds: string[]
+  recommendedApproach: string
+  cautionNote: string
+}
+
+export interface SchoolSignal {
+  id: string
+  schoolId: string
+  source: SignalSource
+  sourceUrl?: string
+  sourceTitle: string
+  publishedDate?: string
+  crawledAt: string
+  title: string
+  summary: string
+  originalText?: string
+  category: SignalCategory
+  keywords: string[]
+  mappedNeedDimensions: NeedDimension[]
+  signalStrength: number
+  confidence: number
+  sourceReliability: number
+  verificationStatus: VerificationStatus
+  dedupeHash?: string
+}
+
+export interface Solution {
+  id: string
+  nameZh: string
+  nameEn?: string
+  description: string
+  targetLevels: SchoolLevel[]
+  suitableMaturityLevels: AIMaturityLevel[]
+  mappedNeedDimensions: NeedDimension[]
+  deliveryMode: "Onsite" | "Online" | "Hybrid"
+  duration: string
+  budgetRange: string
+  prerequisites: string[]
+  deliverables: string[]
+  expectedOutcomes: string[]
+  proposalTemplate: string
+  emailTemplate: string
+  active: boolean
+}
+
+export interface Opportunity {
+  id: string
+  schoolId: string
+  schoolName: string
+  district: string
+  level: SchoolLevel
+  maturityLevel: AIMaturityLevel
+  opportunityScore: number
+  priority: "High" | "Medium" | "Low"
+  stage: OpportunityStage
+  owner?: string
+  estimatedValue?: number
+  recommendedSolutionIds: string[]
+  topNeedDimensions: NeedDimension[]
+  keyReasons: string[]
+  latestSignalSummary: string
+  nextAction?: string
+  nextActionDate?: string
+  lastContactedAt?: string
+  notes?: string
+}
+
+export interface OutreachTemplate {
+  id: string
+  name: string
+  channel: "Email" | "WhatsApp" | "Phone" | "Proposal"
+  targetMaturityLevel?: AIMaturityLevel
+  targetNeedDimension?: NeedDimension
+  subject?: string
+  body: string
+}
+
+export interface CRMActivity {
+  id: string
+  opportunityId: string
+  type: "Note" | "Email" | "Call" | "Meeting" | "Proposal" | "StageChange"
+  title: string
+  content: string
+  createdAt: string
+  createdBy: string
+}
+
+export interface NeedModelConfig {
+  dimensionWeights: Record<NeedDimension, number>
+  signalCategoryWeights: Record<SignalCategory, number>
+  sourceReliabilityWeights: Record<SignalSource, number>
+  recencyWeights: {
+    zeroToThreeMonths: number
+    threeToSixMonths: number
+    sixToTwelveMonths: number
+    twelveMonthsPlus: number
+  }
+  keywordRules: Array<{
+    id: string
+    keyword: string
+    mappedNeedDimension: NeedDimension
+    weight: number
+    active: boolean
+    lastUpdated: string
+  }>
+}
