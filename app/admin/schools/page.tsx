@@ -31,16 +31,36 @@ import {
   Download,
   Upload
 } from "lucide-react"
-import { ScoreBadge } from "@/components/common/ScoreBadge"
+import type { SSRIGrade } from "@/lib/types"
+import { GRADE_CONFIG } from "@/lib/constants"
+import { cn } from "@/lib/utils"
 
-const mockSchools = [
-  { id: "sch-001", name: "聖保羅男女中學", district: "中西區", type: "直資", score: 87, status: "active", lastUpdate: "2024-01-15" },
-  { id: "sch-002", name: "拔萃男書院", district: "九龍城區", type: "直資", score: 85, status: "active", lastUpdate: "2024-01-14" },
-  { id: "sch-003", name: "喇沙書院", district: "九龍城區", type: "資助", score: 82, status: "active", lastUpdate: "2024-01-13" },
-  { id: "sch-004", name: "皇仁書院", district: "灣仔區", type: "官立", score: 80, status: "pending", lastUpdate: "2024-01-12" },
-  { id: "sch-005", name: "英皇書院", district: "中西區", type: "官立", score: 78, status: "active", lastUpdate: "2024-01-11" },
-  { id: "sch-006", name: "聖士提反女子中學", district: "中西區", type: "資助", score: 76, status: "inactive", lastUpdate: "2024-01-10" },
+const mockSchools: Array<{
+  id: string
+  name: string
+  district: string
+  type: string
+  score: number
+  grade: SSRIGrade
+  status: string
+  lastUpdate: string
+}> = [
+  { id: "sch-001", name: "聖保羅男女中學", district: "中西區", type: "直資", score: 87, grade: "A", status: "active", lastUpdate: "2024-01-15" },
+  { id: "sch-002", name: "拔萃男書院", district: "九龍城區", type: "直資", score: 85, grade: "A", status: "active", lastUpdate: "2024-01-14" },
+  { id: "sch-003", name: "喇沙書院", district: "九龍城區", type: "資助", score: 82, grade: "B", status: "active", lastUpdate: "2024-01-13" },
+  { id: "sch-004", name: "皇仁書院", district: "灣仔區", type: "官立", score: 80, grade: "B", status: "pending", lastUpdate: "2024-01-12" },
+  { id: "sch-005", name: "英皇書院", district: "中西區", type: "官立", score: 78, grade: "B", status: "active", lastUpdate: "2024-01-11" },
+  { id: "sch-006", name: "聖士提反女子中學", district: "中西區", type: "資助", score: 76, grade: "C", status: "inactive", lastUpdate: "2024-01-10" },
 ]
+
+function ScoreDisplay({ score, grade }: { score: number; grade: SSRIGrade }) {
+  const config = GRADE_CONFIG[grade]
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium", config.bgColor, config.color)}>
+      {score}
+    </span>
+  )
+}
 
 function getStatusBadge(status: string) {
   switch (status) {
@@ -171,7 +191,7 @@ export default function AdminSchoolsPage() {
                       <Badge variant="outline">{school.type}</Badge>
                     </TableCell>
                     <TableCell>
-                      <ScoreBadge score={school.score} size="sm" />
+                      <ScoreDisplay score={school.score} grade={school.grade} />
                     </TableCell>
                     <TableCell>{getStatusBadge(school.status)}</TableCell>
                     <TableCell className="text-muted-foreground">{school.lastUpdate}</TableCell>
