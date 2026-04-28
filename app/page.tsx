@@ -23,13 +23,7 @@ import { AppShell } from "@/components/layout/AppShell"
 import { AIIllustrationCard } from "@/components/common/AIIllustrationCard"
 import { ScoreBadge } from "@/components/common/ScoreBadge"
 import { mockSchools, mockAdminStats } from "@/lib/mock-data"
-import { 
-  RadarChart, 
-  PolarGrid, 
-  PolarAngleAxis, 
-  Radar, 
-  ResponsiveContainer 
-} from "recharts"
+import { RadarChartWrapper } from "@/components/charts/RadarChartWrapper"
 
 const domains = [
   { 
@@ -241,25 +235,7 @@ export default function HomePage() {
                 <CardDescription>雷達圖總覽</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart data={sampleRadarData}>
-                      <PolarGrid stroke="#e5e7eb" />
-                      <PolarAngleAxis 
-                        dataKey="domain" 
-                        tick={{ fill: "#6b7280", fontSize: 11 }}
-                      />
-                      <Radar
-                        name="評分"
-                        dataKey="score"
-                        stroke="#0ea5e9"
-                        fill="#0ea5e9"
-                        fillOpacity={0.3}
-                        strokeWidth={2}
-                      />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </div>
+                <RadarChartWrapper data={sampleRadarData} className="h-64" />
               </CardContent>
             </Card>
 
