@@ -9,11 +9,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { MaturityBadge } from "@/components/common/MaturityBadge"
 import { PriorityBadge } from "@/components/common/PriorityBadge"
 import { StageBadge } from "@/components/common/StageBadge"
 import { NeedDimensionBadge } from "@/components/common/NeedDimensionBadge"
 import { LoadingState } from "@/components/common/LoadingState"
+import { EmptyState } from "@/components/common/EmptyState"
+import { KanbanBoard } from "@/components/kanban/KanbanBoard"
+import { AIOutreachModal } from "@/components/modals/AIOutreachModal"
+import { FollowUpNoteModal } from "@/components/modals/FollowUpNoteModal"
 import { getOpportunities, getOpportunityStats, getSolutions } from "@/lib/api"
 import { DISTRICTS, OPPORTUNITY_STAGE_CONFIG, NEED_DIMENSION_LABELS } from "@/lib/constants"
 import type { Opportunity, OpportunityStage, NeedDimension } from "@/lib/types"
@@ -30,7 +35,8 @@ import {
   Mail,
   StickyNote,
   MoreHorizontal,
-  ArrowUpDown
+  Filter,
+  RotateCcw
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -46,8 +52,14 @@ export default function OpportunitiesPage() {
   const [selectedStage, setSelectedStage] = useState<string>("all")
   const [selectedOwner, setSelectedOwner] = useState<string>("all")
   const [viewMode, setViewMode] = useState<"table" | "kanban">("table")
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
-  const { data: opportunities, isLoading } = useSWR("opportunities", getOpportunities)
+  // Modal states
+  const [outreachModalOpen, setOutreachModalOpen] = useState(false)
+  const [noteModalOpen, setNoteModalOpen] = useState(false)
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null)
+
+  const { data: opportunities, isLoading, mutate } = useSWR("opportunities", getOpportunities)
   const { data: stats } = useSWR("opportunityStats", getOpportunityStats)
   const { data: solutions } = useSWR("solutions", getSolutions)
 
@@ -57,13 +69,36 @@ export default function OpportunitiesPage() {
   const filteredOpportunities = opportunities?.filter(opp => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
-      if (!opp.schoolName.includes(query)) return false
+      if (!opp.schoolName.toLowerCase().includes(query)) return false
     }
     if (selectedPriority !== "all" && opp.priority !== selectedPriority) return false
     if (selectedStage !== "all" && opp.stage !== selectedStage) return false
     if (selectedOwner !== "all" && opp.owner !== selectedOwner) return false
     return true
   }) || []
+
+  const activeFilterCount = [selectedPriority, selectedStage, selectedOwner].filter(v => v !== "all").length
+
+  const resetFilters = () => {
+    setSelectedPriority("all")
+    setSelectedStage("all")
+    setSelectedOwner("all")
+    setSearchQuery("")
+  }
+
+  const handleOpenOutreach = (opp: Opportunity) => {
+    setSelectedOpportunity(opp)
+    setOutreachModalOpen(true)
+  }
+
+  const handleAddNote = (opp: Opportunity) => {
+    setSelectedOpportunity(opp)
+    setNoteModalOpen(true)
+  }
+
+  const handleNoteSuccess = () => {
+    mutate()
+  }
 
   const statCards = [
     {
@@ -101,19 +136,6 @@ export default function OpportunitiesPage() {
       color: "text-emerald-600",
       bgColor: "bg-emerald-100"
     }
-  ]
-
-  // Kanban stages
-  const kanbanStages: OpportunityStage[] = [
-    "Not Contacted",
-    "Contacted", 
-    "Replied",
-    "Meeting Scheduled",
-    "Proposal Sent",
-    "Pilot",
-    "Won",
-    "Paused",
-    "Lost"
   ]
 
   return (
@@ -155,6 +177,7 @@ export default function OpportunitiesPage() {
         <Card className="mb-6">
           <CardContent className="p-4">
             <div className="flex flex-wrap items-center gap-3">
+              {/* Search */}
               <div className="flex-1 min-w-[200px]">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -167,49 +190,136 @@ export default function OpportunitiesPage() {
                 </div>
               </div>
 
-              <Select value={selectedPriority} onValueChange={setSelectedPriority}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="優先度" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">所有優先度</SelectItem>
-                  <SelectItem value="High">高優先</SelectItem>
-                  <SelectItem value="Medium">中優先</SelectItem>
-                  <SelectItem value="Low">低優先</SelectItem>
-                </SelectContent>
-              </Select>
+              {/* Desktop Filters */}
+              <div className="hidden lg:flex items-center gap-3">
+                <Select value={selectedPriority} onValueChange={setSelectedPriority}>
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue placeholder="優先度" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">所有優先度</SelectItem>
+                    <SelectItem value="High">高優先</SelectItem>
+                    <SelectItem value="Medium">中優先</SelectItem>
+                    <SelectItem value="Low">低優先</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Select value={selectedStage} onValueChange={setSelectedStage}>
-                <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder="階段" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">所有階段</SelectItem>
-                  {(Object.keys(OPPORTUNITY_STAGE_CONFIG) as OpportunityStage[]).map(stage => (
-                    <SelectItem key={stage} value={stage}>
-                      {OPPORTUNITY_STAGE_CONFIG[stage].label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Select value={selectedStage} onValueChange={setSelectedStage}>
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue placeholder="階段" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">所有階段</SelectItem>
+                    {(Object.keys(OPPORTUNITY_STAGE_CONFIG) as OpportunityStage[]).map(stage => (
+                      <SelectItem key={stage} value={stage}>
+                        {OPPORTUNITY_STAGE_CONFIG[stage].label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              <Select value={selectedOwner} onValueChange={setSelectedOwner}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="負責人" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">所有負責人</SelectItem>
-                  {owners.map(owner => (
-                    <SelectItem key={owner} value={owner!}>{owner}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Select value={selectedOwner} onValueChange={setSelectedOwner}>
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue placeholder="負責人" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">所有負責人</SelectItem>
+                    {owners.map(owner => (
+                      <SelectItem key={owner} value={owner!}>{owner}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
+                {activeFilterCount > 0 && (
+                  <Button variant="ghost" size="sm" onClick={resetFilters}>
+                    <RotateCcw className="h-4 w-4 mr-1" />
+                    重設
+                  </Button>
+                )}
+              </div>
+
+              {/* Mobile Filter Button */}
+              <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="lg:hidden relative">
+                    <Filter className="h-4 w-4 mr-2" />
+                    篩選
+                    {activeFilterCount > 0 && (
+                      <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[60vh] rounded-t-xl">
+                  <SheetHeader>
+                    <SheetTitle className="flex items-center justify-between">
+                      <span>篩選條件</span>
+                      <Button variant="ghost" size="sm" onClick={resetFilters}>
+                        <RotateCcw className="h-4 w-4 mr-1" />
+                        重設
+                      </Button>
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="space-y-4 mt-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">優先度</label>
+                      <Select value={selectedPriority} onValueChange={setSelectedPriority}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="選擇優先度" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">所有優先度</SelectItem>
+                          <SelectItem value="High">高優先</SelectItem>
+                          <SelectItem value="Medium">中優先</SelectItem>
+                          <SelectItem value="Low">低優先</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">階段</label>
+                      <Select value={selectedStage} onValueChange={setSelectedStage}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="選擇階段" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">所有階段</SelectItem>
+                          {(Object.keys(OPPORTUNITY_STAGE_CONFIG) as OpportunityStage[]).map(stage => (
+                            <SelectItem key={stage} value={stage}>
+                              {OPPORTUNITY_STAGE_CONFIG[stage].label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">負責人</label>
+                      <Select value={selectedOwner} onValueChange={setSelectedOwner}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="選擇負責人" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">所有負責人</SelectItem>
+                          {owners.map(owner => (
+                            <SelectItem key={owner} value={owner!}>{owner}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button className="w-full mt-4" onClick={() => setMobileFiltersOpen(false)}>
+                      套用篩選
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              {/* View Toggle */}
               <div className="flex items-center gap-1 ml-auto">
                 <Button
                   variant={viewMode === "table" ? "secondary" : "ghost"}
                   size="icon"
                   onClick={() => setViewMode("table")}
+                  title="列表視圖"
                 >
                   <List className="h-4 w-4" />
                 </Button>
@@ -217,6 +327,7 @@ export default function OpportunitiesPage() {
                   variant={viewMode === "kanban" ? "secondary" : "ghost"}
                   size="icon"
                   onClick={() => setViewMode("kanban")}
+                  title="看板視圖"
                 >
                   <LayoutGrid className="h-4 w-4" />
                 </Button>
@@ -228,6 +339,19 @@ export default function OpportunitiesPage() {
         {/* Content */}
         {isLoading ? (
           <LoadingState message="載入商機資料..." />
+        ) : filteredOpportunities.length === 0 ? (
+          <EmptyState 
+            title="沒有符合條件的商機"
+            description="請嘗試調整篩選條件或搜尋關鍵字"
+            action={
+              activeFilterCount > 0 ? (
+                <Button variant="outline" onClick={resetFilters}>
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  重設篩選條件
+                </Button>
+              ) : undefined
+            }
+          />
         ) : viewMode === "table" ? (
           /* Table View */
           <Card>
@@ -237,31 +361,32 @@ export default function OpportunitiesPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[200px]">學校</TableHead>
-                      <TableHead>地區</TableHead>
-                      <TableHead>成熟度</TableHead>
-                      <TableHead>主要需要</TableHead>
-                      <TableHead className="text-center">商機分數</TableHead>
+                      <TableHead className="hidden sm:table-cell">地區</TableHead>
+                      <TableHead className="hidden md:table-cell">成熟度</TableHead>
+                      <TableHead className="hidden lg:table-cell">主要需要</TableHead>
+                      <TableHead className="text-center">分數</TableHead>
                       <TableHead>優先度</TableHead>
-                      <TableHead>階段</TableHead>
-                      <TableHead>負責人</TableHead>
-                      <TableHead>下一步</TableHead>
-                      <TableHead className="text-right">預計價值</TableHead>
+                      <TableHead className="hidden sm:table-cell">階段</TableHead>
+                      <TableHead className="hidden xl:table-cell">負責人</TableHead>
+                      <TableHead className="hidden xl:table-cell">下一步</TableHead>
+                      <TableHead className="text-right hidden lg:table-cell">預計價值</TableHead>
                       <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredOpportunities.map((opp) => (
-                      <TableRow key={opp.id}>
+                      <TableRow key={opp.id} className="group">
                         <TableCell>
                           <Link href={`/needs/${opp.schoolId}`} className="font-medium text-foreground hover:text-primary">
                             {opp.schoolName}
                           </Link>
+                          <p className="text-xs text-muted-foreground sm:hidden">{opp.district}</p>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{opp.district}</TableCell>
-                        <TableCell>
+                        <TableCell className="text-muted-foreground hidden sm:table-cell">{opp.district}</TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <MaturityBadge level={opp.maturityLevel} size="sm" />
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <div className="flex flex-wrap gap-1">
                             {opp.topNeedDimensions.slice(0, 2).map(dim => (
                               <NeedDimensionBadge key={dim} dimension={dim} size="sm" showIcon={false} />
@@ -280,11 +405,11 @@ export default function OpportunitiesPage() {
                         <TableCell>
                           <PriorityBadge priority={opp.priority} size="sm" />
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <StageBadge stage={opp.stage} size="sm" />
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{opp.owner || "-"}</TableCell>
-                        <TableCell>
+                        <TableCell className="text-muted-foreground hidden xl:table-cell">{opp.owner || "-"}</TableCell>
+                        <TableCell className="hidden xl:table-cell">
                           <div className="max-w-[150px]">
                             <p className="text-sm text-foreground truncate">{opp.nextAction || "-"}</p>
                             {opp.nextActionDate && (
@@ -294,13 +419,13 @@ export default function OpportunitiesPage() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-medium">
+                        <TableCell className="text-right font-medium hidden lg:table-cell">
                           {opp.estimatedValue ? `$${opp.estimatedValue.toLocaleString()}` : "-"}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -311,11 +436,11 @@ export default function OpportunitiesPage() {
                                   查看需求
                                 </Link>
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleOpenOutreach(opp)}>
                                 <Mail className="h-4 w-4 mr-2" />
                                 生成文案
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleAddNote(opp)}>
                                 <StickyNote className="h-4 w-4 mr-2" />
                                 添加備註
                               </DropdownMenuItem>
@@ -331,62 +456,33 @@ export default function OpportunitiesPage() {
           </Card>
         ) : (
           /* Kanban View */
-          <div className="flex gap-4 overflow-x-auto pb-4">
-            {kanbanStages.map(stage => {
-              const stageOpps = filteredOpportunities.filter(o => o.stage === stage)
-              const config = OPPORTUNITY_STAGE_CONFIG[stage]
-              return (
-                <div key={stage} className="flex-shrink-0 w-[280px]">
-                  <div className={cn("rounded-lg p-3 mb-3", config.bgColor)}>
-                    <div className="flex items-center justify-between">
-                      <span className={cn("font-medium", config.color)}>{config.label}</span>
-                      <span className="text-sm text-muted-foreground">{stageOpps.length}</span>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    {stageOpps.map(opp => (
-                      <Card key={opp.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <Link href={`/needs/${opp.schoolId}`}>
-                            <h4 className="font-medium text-foreground mb-2">{opp.schoolName}</h4>
-                          </Link>
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <NeedDimensionBadge 
-                                dimension={opp.topNeedDimensions[0]} 
-                                size="sm" 
-                                showIcon={false}
-                              />
-                              <span className={cn(
-                                "text-sm font-semibold",
-                                opp.opportunityScore >= 75 ? "text-emerald-600" : 
-                                opp.opportunityScore >= 50 ? "text-sky-600" : "text-slate-500"
-                              )}>
-                                {opp.opportunityScore}分
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between text-sm text-muted-foreground">
-                              <span>{opp.owner || "未分配"}</span>
-                              {opp.estimatedValue && (
-                                <span>${(opp.estimatedValue / 1000).toFixed(0)}K</span>
-                              )}
-                            </div>
-                            {opp.nextAction && (
-                              <p className="text-xs text-muted-foreground truncate">
-                                {opp.nextAction}
-                              </p>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <KanbanBoard
+            opportunities={filteredOpportunities}
+            onOpenOutreach={handleOpenOutreach}
+            onAddNote={handleAddNote}
+          />
         )}
       </main>
+
+      {/* Modals */}
+      {selectedOpportunity && (
+        <>
+          <AIOutreachModal
+            open={outreachModalOpen}
+            onOpenChange={setOutreachModalOpen}
+            schoolId={selectedOpportunity.schoolId}
+            schoolName={selectedOpportunity.schoolName}
+          />
+          <FollowUpNoteModal
+            open={noteModalOpen}
+            onOpenChange={setNoteModalOpen}
+            opportunityId={selectedOpportunity.id}
+            schoolName={selectedOpportunity.schoolName}
+            currentStage={selectedOpportunity.stage}
+            onSuccess={handleNoteSuccess}
+          />
+        </>
+      )}
     </div>
   )
 }

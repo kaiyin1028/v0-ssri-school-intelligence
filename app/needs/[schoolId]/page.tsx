@@ -51,6 +51,9 @@ import {
 import { cn } from "@/lib/utils"
 import type { NeedDimension } from "@/lib/types"
 import { useState } from "react"
+import { AIOutreachModal } from "@/components/modals/AIOutreachModal"
+import { SolutionDetailModal } from "@/components/modals/SolutionDetailModal"
+import type { Solution } from "@/lib/types"
 
 const dimensionIcons: Record<NeedDimension, React.ElementType> = {
   TeacherTraining: GraduationCap,
@@ -70,6 +73,9 @@ export default function SchoolNeedDetailPage({
 }) {
   const { schoolId } = use(params)
   const [isReanalyzing, setIsReanalyzing] = useState(false)
+  const [outreachModalOpen, setOutreachModalOpen] = useState(false)
+  const [solutionModalOpen, setSolutionModalOpen] = useState(false)
+  const [selectedSolution, setSelectedSolution] = useState<Solution | null>(null)
 
   const { data: profile, isLoading: profileLoading, mutate: mutateProfile } = useSWR(
     `needProfile-${schoolId}`, 
@@ -98,6 +104,11 @@ export default function SchoolNeedDetailPage({
     } finally {
       setIsReanalyzing(false)
     }
+  }
+
+  const handleViewSolution = (solution: Solution) => {
+    setSelectedSolution(solution)
+    setSolutionModalOpen(true)
   }
 
   if (isLoading) {
@@ -161,7 +172,7 @@ export default function SchoolNeedDetailPage({
                 <RefreshCw className={cn("h-4 w-4 mr-2", isReanalyzing && "animate-spin")} />
                 重新分析
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => setOutreachModalOpen(true)}>
                 <Mail className="h-4 w-4 mr-2" />
                 生成聯絡文案
               </Button>
@@ -314,10 +325,15 @@ export default function SchoolNeedDetailPage({
                   <p className="text-sm text-muted-foreground text-center py-4">暫無推薦方案</p>
                 ) : (
                   recommendedSolutions.map((solution) => (
-                    <SolutionCard 
-                      key={solution.id} 
-                      solution={solution}
-                      matchReason="根據學校需求維度及成熟度匹配"
+<SolutionCard
+                    key={solution.id}
+                    solution={solution}
+                    matchReason="根據學校需求維度及成熟度匹配"
+                    onViewDetails={() => handleViewSolution(solution)}
+                    onGenerateEmail={() => {
+                      setSelectedSolution(solution)
+                      setOutreachModalOpen(true)
+                    }}
                     />
                   ))
                 )}
@@ -353,6 +369,24 @@ export default function SchoolNeedDetailPage({
           </div>
         </div>
       </main>
+
+      {/* Modals */}
+      <AIOutreachModal
+        open={outreachModalOpen}
+        onOpenChange={setOutreachModalOpen}
+        schoolId={schoolId}
+        schoolName={school.nameZh}
+      />
+
+      <SolutionDetailModal
+        open={solutionModalOpen}
+        onOpenChange={setSolutionModalOpen}
+        solution={selectedSolution}
+        onGenerateEmail={(solutionId) => {
+          setSolutionModalOpen(false)
+          setOutreachModalOpen(true)
+        }}
+      />
     </div>
   )
 }
