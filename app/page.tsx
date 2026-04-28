@@ -22,7 +22,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AppShell } from "@/components/layout/AppShell"
 import { AIIllustrationCard } from "@/components/common/AIIllustrationCard"
 import { ScoreBadge } from "@/components/common/ScoreBadge"
-import { mockSchools, mockAdminStats } from "@/lib/mock-data"
+import { getSchools, getAdminDashboard } from "@/lib/api"
 import { RadarChartWrapper } from "@/components/charts/RadarChartWrapper"
 
 const domains = [
@@ -91,8 +91,12 @@ const sampleRadarData = [
   { domain: "管治透明", score: 80 }
 ]
 
-export default function HomePage() {
-  const featuredSchools = mockSchools.filter(s => s.totalScore !== null).slice(0, 3)
+export default async function HomePage() {
+  const [schools, adminStats] = await Promise.all([
+    getSchools(),
+    getAdminDashboard()
+  ])
+  const featuredSchools = schools.filter(s => s.totalScore !== null).slice(0, 3)
 
   return (
     <AppShell>
@@ -143,7 +147,7 @@ export default function HomePage() {
                   <School className="h-6 w-6 text-sky-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">{mockAdminStats.totalSchools}</p>
+                  <p className="text-2xl font-bold text-foreground">{adminStats.totalSchools}</p>
                   <p className="text-sm text-muted-foreground">已收錄學校</p>
                 </div>
               </CardContent>
@@ -154,7 +158,7 @@ export default function HomePage() {
                   <FileText className="h-6 w-6 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">{mockAdminStats.newDocuments.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-foreground">{adminStats.newDocuments.toLocaleString()}</p>
                   <p className="text-sm text-muted-foreground">已分析文件</p>
                 </div>
               </CardContent>
